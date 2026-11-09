@@ -12,15 +12,15 @@
 <body class="account-page">
 <nav class="navbar site-nav"><div class="container">
     <a class="navbar-brand brand-mark" href="${pageContext.request.contextPath}/rooms">THE GRAND <span>HORIZON</span></a>
-    <form method="post" action="${pageContext.request.contextPath}/logout">
-        <button class="nav-link border-0 bg-transparent" type="submit">Sign out</button>
-    </form>
+    <a class="nav-link" href="${pageContext.request.contextPath}/rooms">Back to rooms</a>
 </div></nav>
 <main class="container account-wrap">
     <section class="account-card">
         <p class="eyebrow">ADMINISTRATION</p>
-        <h1>Welcome, <c:out value="${sessionScope.username}"/>.</h1>
-        <p class="muted-copy">You are signed in with the Admin role.</p>
+        <h1>Welcome, <c:out value="${not empty admin ? admin.firstName : sessionScope.username}"/>.</h1>
+        <p class="muted-copy mb-1">Administrator</p>
+        <p class="muted-copy"><c:out value="${not empty admin ? admin.email : sessionScope.email}"/></p>
+        <a class="btn btn-outline-secondary w-100 mt-2" href="${pageContext.request.contextPath}/admin/bookings">View bookings</a>
         <a class="btn btn-gold w-100 mt-3" href="${pageContext.request.contextPath}/admin/rooms">Create, update, or delete rooms</a>
         <a class="btn btn-gold w-100 mt-3" href="${pageContext.request.contextPath}/rooms">View rooms</a>
     </section>

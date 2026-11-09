@@ -23,23 +23,40 @@
         </button>
         <div class="collapse navbar-collapse" id="mainNav">
             <div class="navbar-nav ms-auto align-items-lg-center gap-lg-4">
-                <a class="nav-link" href="#rooms">Rooms</a>
-                <a class="nav-link" id="about-toggle" href="#about-details" aria-controls="about-details" aria-expanded="false">About Us</a>
                 <c:choose>
-                    <c:when test="${not empty sessionScope.userId}">
-                        <a class="nav-link" href="${pageContext.request.contextPath}/profile">My profile</a>
-                    </c:when>
-                    <c:when test="${not empty sessionScope.username}">
-                        <span class="nav-link">Welcome, <c:out value="${sessionScope.username}"/></span>
+                    <c:when test="${sessionScope.role eq 'Admin' or sessionScope.role eq 'ADMIN'}">
+                        <a class="nav-link" href="${pageContext.request.contextPath}/rooms#rooms">Rooms</a>
+                        <a class="nav-link" href="${pageContext.request.contextPath}/admin/bookings">
+                            Bookings
+                            <c:if test="${bookingCount gt 0}">
+                                <span class="booking-notification-badge" aria-label="<c:out value='${bookingCount}'/> active bookings">
+                                    <c:out value="${bookingCount}"/>
+                                </span>
+                            </c:if>
+                        </a>
+                        <a class="nav-link" href="${pageContext.request.contextPath}/admin/rooms">Manage Rooms</a>
+                        <a class="nav-link" href="${pageContext.request.contextPath}/profile">My Profile</a>
+                        <form method="post" action="${pageContext.request.contextPath}/logout">
+                            <button class="nav-link border-0 bg-transparent" type="submit">Sign out</button>
+                        </form>
                     </c:when>
                     <c:otherwise>
-                        <a class="nav-link" href="${pageContext.request.contextPath}/login">Sign in</a>
-                        <a class="btn btn-nav" href="${pageContext.request.contextPath}/register">Join us</a>
+                        <a class="nav-link" href="#rooms">Rooms</a>
+                        <a class="nav-link" id="about-toggle" href="#about-details" aria-controls="about-details" aria-expanded="false">About Us</a>
+                        <c:choose>
+                            <c:when test="${not empty sessionScope.userId}">
+                                <a class="nav-link" href="${pageContext.request.contextPath}/profile">My profile</a>
+                            </c:when>
+                            <c:when test="${not empty sessionScope.username}">
+                                <span class="nav-link">Welcome, <c:out value="${sessionScope.username}"/></span>
+                            </c:when>
+                            <c:otherwise>
+                                <a class="nav-link" href="${pageContext.request.contextPath}/login">Sign in</a>
+                                <a class="btn btn-nav" href="${pageContext.request.contextPath}/register">Join us</a>
+                            </c:otherwise>
+                        </c:choose>
                     </c:otherwise>
                 </c:choose>
-                <c:if test="${sessionScope.role eq 'Admin'}">
-                    <a class="nav-link" href="${pageContext.request.contextPath}/admin/rooms">Manage rooms</a>
-                </c:if>
             </div>
         </div>
     </div>
@@ -91,10 +108,10 @@
             <div class="row g-4">
                 <c:forEach var="room" items="${rooms}">
                     <div class="col-md-6">
-                        <article class="room-card">
+                        <article class="room-card" style="overflow: hidden !important;">
                             <div class="room-image ${room.roomType eq 'LUXURY' ? 'room-image-luxury' : 'room-image-standard'}">
                                 <c:if test="${not empty room.imageFileName}">
-                                    <img class="room-photo" src="${pageContext.request.contextPath}/room-image?file=${room.imageFileName}" alt="Room <c:out value='${room.roomNumber}'/>">
+                                    <img class="room-photo" src="${pageContext.request.contextPath}/room-image?file=${room.imageFileName}" alt="Room <c:out value='${room.roomNumber}'/>" style="width: 100% !important; height: 250px !important; object-fit: cover !important; border-radius: 8px 8px 0 0 !important; display: block !important;">
                                 </c:if>
                                 <span class="room-tag"><c:out value="${room.roomType eq 'LUXURY' ? 'THE SUITE COLLECTION' : 'THE HORIZON COLLECTION'}"/></span>
                                 <span class="room-number">ROOM <c:out value="${room.roomNumber}"/></span>
@@ -103,7 +120,7 @@
                                 <div class="d-flex justify-content-between align-items-start gap-3">
                                     <div><h3><c:out value="${room.roomType eq 'LUXURY' ? 'Horizon Suite' : 'Signature Room'}"/></h3>
                                         <p class="muted-copy mb-2"><c:out value="${room.description}"/></p></div>
-                                    <p class="room-price"><strong>Rs. <c:out value="${room.pricePerNight}"/></strong><span> / night</span></p>
+                                    <p class="room-price"><strong>Rs. <c:out value="${room.hourlyRate}"/></strong><span> / hour</span></p>
                                 </div>
                                 <p class="room-meta"><c:out value="${room.capacity}"/> guests <span>·</span> <c:out value="${room.amenities}"/></p>
                                 <c:if test="${not empty room.mealOptions}">
@@ -115,11 +132,11 @@
                                     </p>
                                 </c:if>
                                 <c:choose>
-                                    <c:when test="${not empty sessionScope.userId or not empty sessionScope.username}">
-                                        <a class="text-link" href="${pageContext.request.contextPath}/booking?roomId=${room.id}">Book this room <span aria-hidden="true">→</span></a>
+                                    <c:when test="${sessionScope.role eq 'Admin' or sessionScope.role eq 'ADMIN'}">
+                                        <a class="btn btn-outline-secondary mt-3" href="${pageContext.request.contextPath}/admin/rooms#room-${room.id}">Manage Room</a>
                                     </c:when>
                                     <c:otherwise>
-                                        <a class="text-link" href="${pageContext.request.contextPath}/login">Sign in to book <span aria-hidden="true">→</span></a>
+                                        <a class="text-link" href="${pageContext.request.contextPath}/booking?roomId=${room.id}">Check Availability <span aria-hidden="true">→</span></a>
                                     </c:otherwise>
                                 </c:choose>
                             </div>
@@ -134,10 +151,20 @@
     </section>
 </main>
 <footer class="site-footer">
-    <div class="container d-flex flex-column flex-md-row justify-content-between gap-2">
-        <a class="brand-mark footer-brand" href="${pageContext.request.contextPath}/rooms">THE GRAND <span>HORIZON</span></a>
-        <p class="mb-0">A considered stay, wherever the day takes you.</p>
-        <small>© 2026 The Grand Horizon</small>
+    <div class="container">
+        <div class="d-flex flex-column flex-md-row justify-content-between gap-4">
+            <div>
+                <a class="brand-mark footer-brand" href="${pageContext.request.contextPath}/rooms">THE GRAND <span>HORIZON</span></a>
+                <p class="mt-3 mb-0">A considered stay, wherever the day takes you.</p>
+            </div>
+            <address class="footer-contact mb-0">
+                <h2>Contact Us</h2>
+                <p><strong>Address:</strong> Colombo</p>
+                <p><strong>Email:</strong> <a href="mailto:mahelampramuditha@gmail.com">mahelampramuditha@gmail.com</a></p>
+                <p><strong>Phone:</strong> <a href="tel:0352222333">035 2222333</a></p>
+            </address>
+            <small>© 2026 The Grand Horizon</small>
+        </div>
     </div>
 </footer>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

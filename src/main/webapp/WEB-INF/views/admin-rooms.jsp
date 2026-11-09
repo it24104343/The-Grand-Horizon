@@ -13,7 +13,7 @@
 <body class="account-page">
 <nav class="navbar site-nav"><div class="container">
     <a class="navbar-brand brand-mark" href="${pageContext.request.contextPath}/rooms">THE GRAND <span>HORIZON</span></a>
-    <a class="nav-link" href="${pageContext.request.contextPath}/admin-dashboard.jsp">Admin dashboard</a>
+    <a class="nav-link" href="${pageContext.request.contextPath}/rooms">Back to rooms</a>
 </div></nav>
 <main class="container py-5">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
@@ -32,7 +32,7 @@
 
     <section class="card p-4 p-lg-5 mb-5" id="create-room">
         <h2 class="h4 mb-1">Create a room</h2>
-        <p class="muted-copy mb-4">Set its room details, base nightly price, image and meal options.</p>
+        <p class="muted-copy mb-4">Set room details, fixed hourly rate, image and meal options.</p>
         <form method="post" enctype="multipart/form-data" action="${pageContext.request.contextPath}/admin/rooms" class="row g-3">
             <input type="hidden" name="action" value="create">
             <div class="col-sm-6 col-lg-3">
@@ -42,8 +42,9 @@
             <div class="col-sm-6 col-lg-3">
                 <label class="form-label" for="new-room-type">Type</label>
                 <select class="form-select" id="new-room-type" name="roomType" required>
-                    <option value="STANDARD">Standard</option>
-                    <option value="LUXURY">Luxury</option>
+                    <option value="NORMAL" data-rate="1000.00">Normal — Rs. 1,000 / hour</option>
+                    <option value="STANDARD" data-rate="2000.00" selected>Standard — Rs. 2,000 / hour</option>
+                    <option value="LUXURY" data-rate="3000.00">Luxury — Rs. 3,000 / hour</option>
                 </select>
             </div>
             <div class="col-sm-6 col-lg-3">
@@ -51,8 +52,8 @@
                 <input class="form-control" id="new-room-capacity" name="capacity" type="number" min="1" max="50" required>
             </div>
             <div class="col-sm-6 col-lg-3">
-                <label class="form-label" for="new-room-price">Base price per night (Rs.)</label>
-                <input class="form-control" id="new-room-price" name="pricePerNight" type="number" min="0.01" step="0.01" required>
+                <label class="form-label" for="new-room-price">Fixed hourly rate (Rs.)</label>
+                <input class="form-control" id="new-room-price" name="pricePerNight" type="number" value="2000.00" readonly required>
             </div>
             <div class="col-md-6">
                 <label class="form-label" for="new-room-description">Description</label>
@@ -67,13 +68,23 @@
                 <input class="form-control" id="new-room-image" name="roomImage" type="file" accept="image/png,image/jpeg">
             </div>
             <div class="col-md-6">
-                <label class="form-label" for="new-room-meals">Meals available for this room</label>
-                <select class="form-select" id="new-room-meals" name="mealOptions" multiple size="3">
-                    <option value="BREAKFAST">Breakfast</option>
-                    <option value="LUNCH">Lunch</option>
-                    <option value="DINNER">Dinner</option>
-                </select>
-                <small class="form-text text-muted">Use Ctrl (Windows) or Command (Mac) to select more than one. Leave blank for room-only.</small>
+                <fieldset class="meal-options-fieldset">
+                    <legend class="form-label">Meals available</legend>
+                    <div class="meal-options">
+                        <label class="meal-option" for="new-room-breakfast">
+                            <input id="new-room-breakfast" name="mealOptions" type="checkbox" value="BREAKFAST" checked>
+                            <span>Breakfast</span><strong>Rs. 500</strong>
+                        </label>
+                        <label class="meal-option" for="new-room-lunch">
+                            <input id="new-room-lunch" name="mealOptions" type="checkbox" value="LUNCH" checked>
+                            <span>Lunch</span><strong>Rs. 800</strong>
+                        </label>
+                        <label class="meal-option" for="new-room-dinner">
+                            <input id="new-room-dinner" name="mealOptions" type="checkbox" value="DINNER" checked>
+                            <span>Dinner</span><strong>Rs. 1,000</strong>
+                        </label>
+                    </div>
+                </fieldset>
             </div>
             <div class="col-12 form-check ms-2">
                 <input class="form-check-input" id="new-room-available" name="available" type="checkbox" checked>
@@ -91,14 +102,14 @@
         <div class="row g-4">
             <c:forEach var="room" items="${rooms}">
                 <div class="col-xl-6">
-                    <article class="card h-100 p-4 p-lg-4">
+                    <article class="card h-100 p-4 p-lg-4" id="room-${room.id}">
                         <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
                             <div>
                                 <span class="room-tag admin-room-tag"><c:out value="${room.roomType}"/></span>
                                 <h3 class="h5 mt-3 mb-1">Room <c:out value="${room.roomNumber}"/></h3>
                             </div>
                             <c:if test="${not empty room.imageFileName}">
-                                <img class="admin-room-thumbnail" src="${pageContext.request.contextPath}/room-image?file=${room.imageFileName}" alt="Room <c:out value='${room.roomNumber}'/>">
+                                <img class="admin-room-thumbnail" src="${pageContext.request.contextPath}/room-image?file=${room.imageFileName}" alt="Room <c:out value='${room.roomNumber}'/>" style="width: 100% !important; height: 250px !important; object-fit: cover !important; border-radius: 8px 8px 0 0 !important; display: block !important;">
                             </c:if>
                         </div>
                         <form method="post" enctype="multipart/form-data" action="${pageContext.request.contextPath}/admin/rooms" class="row g-3 align-items-end">
@@ -111,8 +122,9 @@
                             <div class="col-sm-6">
                                 <label class="form-label" for="room-type-${room.id}">Type</label>
                                 <select class="form-select" id="room-type-${room.id}" name="roomType" required>
-                                    <option value="STANDARD" ${room.roomType eq 'STANDARD' ? 'selected' : ''}>Standard</option>
-                                    <option value="LUXURY" ${room.roomType eq 'LUXURY' ? 'selected' : ''}>Luxury</option>
+                                    <option value="NORMAL" data-rate="1000.00" ${room.roomType eq 'NORMAL' ? 'selected' : ''}>Normal — Rs. 1,000 / hour</option>
+                                    <option value="STANDARD" data-rate="2000.00" ${room.roomType eq 'STANDARD' ? 'selected' : ''}>Standard — Rs. 2,000 / hour</option>
+                                    <option value="LUXURY" data-rate="3000.00" ${room.roomType eq 'LUXURY' ? 'selected' : ''}>Luxury — Rs. 3,000 / hour</option>
                                 </select>
                             </div>
                             <div class="col-sm-6">
@@ -120,8 +132,8 @@
                                 <input class="form-control" id="room-capacity-${room.id}" name="capacity" type="number" min="1" max="50" value="<c:out value='${room.capacity}'/>" required>
                             </div>
                             <div class="col-sm-6">
-                                <label class="form-label" for="room-price-${room.id}">Base price per night (Rs.)</label>
-                                <input class="form-control" id="room-price-${room.id}" name="pricePerNight" type="number" min="0.01" step="0.01" value="<c:out value='${room.pricePerNight}'/>" required>
+                                <label class="form-label" for="room-price-${room.id}">Fixed hourly rate (Rs.)</label>
+                                <input class="form-control room-hourly-rate" id="room-price-${room.id}" name="pricePerNight" type="number" value="<c:out value='${room.hourlyRate}'/>" readonly required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label" for="room-description-${room.id}">Description</label>
@@ -136,12 +148,23 @@
                                 <input class="form-control" id="room-image-${room.id}" name="roomImage" type="file" accept="image/png,image/jpeg">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label" for="room-meals-${room.id}">Meals available</label>
-                                <select class="form-select" id="room-meals-${room.id}" name="mealOptions" multiple size="3">
-                                    <option value="BREAKFAST" ${room.breakfastAvailable ? 'selected' : ''}>Breakfast</option>
-                                    <option value="LUNCH" ${room.lunchAvailable ? 'selected' : ''}>Lunch</option>
-                                    <option value="DINNER" ${room.dinnerAvailable ? 'selected' : ''}>Dinner</option>
-                                </select>
+                                <fieldset class="meal-options-fieldset">
+                                    <legend class="form-label">Meals available</legend>
+                                    <div class="meal-options">
+                                        <label class="meal-option" for="room-breakfast-${room.id}">
+                                            <input id="room-breakfast-${room.id}" name="mealOptions" type="checkbox" value="BREAKFAST" ${room.breakfastAvailable ? 'checked' : ''}>
+                                            <span>Breakfast</span><strong>Rs. 500</strong>
+                                        </label>
+                                        <label class="meal-option" for="room-lunch-${room.id}">
+                                            <input id="room-lunch-${room.id}" name="mealOptions" type="checkbox" value="LUNCH" ${room.lunchAvailable ? 'checked' : ''}>
+                                            <span>Lunch</span><strong>Rs. 800</strong>
+                                        </label>
+                                        <label class="meal-option" for="room-dinner-${room.id}">
+                                            <input id="room-dinner-${room.id}" name="mealOptions" type="checkbox" value="DINNER" ${room.dinnerAvailable ? 'checked' : ''}>
+                                            <span>Dinner</span><strong>Rs. 1,000</strong>
+                                        </label>
+                                    </div>
+                                </fieldset>
                             </div>
                             <div class="col-12 form-check ms-2">
                                 <input class="form-check-input" id="room-available-${room.id}" name="available" type="checkbox" ${room.available ? 'checked' : ''}>
@@ -165,5 +188,19 @@
         </div>
     </section>
 </main>
+<script>
+(() => {
+    function syncRate(select) {
+        const form = select.form;
+        const rate = select.selectedOptions[0].dataset.rate;
+        const input = form.querySelector('[name="pricePerNight"]');
+        if (input && rate) input.value = rate;
+    }
+    document.querySelectorAll('select[name="roomType"]').forEach((select) => {
+        select.addEventListener('change', () => syncRate(select));
+        syncRate(select);
+    });
+})();
+</script>
 </body>
 </html>

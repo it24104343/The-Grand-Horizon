@@ -4,6 +4,7 @@ import com.grandhorizon.dao.RoomDAO;
 import com.grandhorizon.model.LuxuryRoom;
 import com.grandhorizon.model.Room;
 import com.grandhorizon.model.StandardRoom;
+import com.grandhorizon.util.BookingPricing;
 import com.grandhorizon.util.RoomImageStorage;
 import com.grandhorizon.util.RoomImageStorage.InvalidImageException;
 import jakarta.servlet.ServletException;
@@ -16,7 +17,6 @@ import jakarta.servlet.http.Part;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -113,45 +113,49 @@ public class RoomManagementServlet extends HttpServlet {
         String description = value(request, "description");
         String amenities = value(request, "amenities");
         String capacityText = value(request, "capacity");
-        String priceText = value(request, "pricePerNight");
-        Set<String> mealOptions = new LinkedHashSet<>();
-        String[] submittedMealOptions = request.getParameterValues("mealOptions");
-        if (submittedMealOptions != null) {
-            for (String option : submittedMealOptions) {
-                String normalizedOption = option.toUpperCase(Locale.ROOT);
-                if (!Set.of("BREAKFAST", "LUNCH", "DINNER").contains(normalizedOption)) {
-                    throw new InvalidRoomException("Choose only the listed meal options.");
-                }
-                mealOptions.add(normalizedOption);
-            }
-        }
+        Set<String> mealOptions = parseMealOptions(request.getParameterValues("mealOptions"));
 
         if (roomNumber.isBlank() || roomNumber.length() > 20
                 || description.isBlank() || description.length() > 500
                 || amenities.isBlank() || amenities.length() > 500) {
             throw new InvalidRoomException("Enter a room number, description (up to 500 characters), and amenities (up to 500 characters).");
         }
-        if (!roomType.equals("STANDARD") && !roomType.equals("LUXURY")) {
-            throw new InvalidRoomException("Choose Standard or Luxury for the room type.");
+        if (!Set.of("NORMAL", "STANDARD", "LUXURY").contains(roomType)) {
+            throw new InvalidRoomException("Choose Normal, Standard, or Luxury for the room type.");
         }
 
         try {
             int capacity = Integer.parseInt(capacityText);
-            BigDecimal price = new BigDecimal(priceText).setScale(2, RoundingMode.UNNECESSARY);
-            if (capacity < 1 || capacity > 50 || price.signum() <= 0) {
-                throw new InvalidRoomException("Capacity must be from 1 to 50 and the nightly price must be greater than zero.");
+            BigDecimal hourlyRate = Room.hourlyRateForType(roomType);
+            if (capacity < 1 || capacity > 50) {
+                throw new InvalidRoomException("Capacity must be from 1 to 50.");
             }
             Room room = roomType.equals("LUXURY")
-                    ? new LuxuryRoom(id, roomNumber, description, capacity, price, amenities,
+                    ? new LuxuryRoom(id, roomNumber, description, capacity, hourlyRate, amenities,
                             request.getParameter("available") != null)
-                    : new StandardRoom(id, roomNumber, description, capacity, price, amenities,
+                    : new StandardRoom(id, roomNumber, description, capacity, hourlyRate, amenities,
                             request.getParameter("available") != null);
             room.setRoomType(roomType);
             room.setMealOptions(new ArrayList<>(mealOptions));
             return room;
-        } catch (NumberFormatException | ArithmeticException e) {
-            throw new InvalidRoomException("Enter a whole-number capacity and a valid price with no more than two decimal places.");
+        } catch (NumberFormatException e) {
+            throw new InvalidRoomException("Enter a whole-number capacity.");
         }
+    }
+
+    private Set<String> parseMealOptions(String[] submittedMealOptions) throws InvalidRoomException {
+        Set<String> mealOptions = new LinkedHashSet<>();
+        if (submittedMealOptions == null) {
+            return mealOptions;
+        }
+        try {
+            for (String meal : submittedMealOptions) {
+                mealOptions.add(BookingPricing.normalizeMeal(meal));
+            }
+        } catch (IllegalArgumentException e) {
+            throw new InvalidRoomException("Choose only Breakfast, Lunch, or Dinner.");
+        }
+        return mealOptions;
     }
 
     private long parseId(String value) throws InvalidRoomException {

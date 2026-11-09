@@ -1,9 +1,15 @@
 package com.grandhorizon.servlet;
 
+import com.grandhorizon.dao.BookingDAO;
 import com.grandhorizon.dao.RoomDAO;
 import com.grandhorizon.dao.UserDAO;
+import com.grandhorizon.model.Booking;
 import com.grandhorizon.model.Room;
-import com.grandhorizon.util.FileStorageUtil;
+import com.grandhorizon.model.User;
+import com.grandhorizon.util.BookingPricing;
+import com.grandhorizon.util.CsrfTokenUtil;
+import com.grandhorizon.util.EmailUtil;
+import jakarta.mail.MessagingException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -11,18 +17,18 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.StandardOpenOption;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 @WebServlet("/booking")
 public class BookingServlet extends HttpServlet {
     private final RoomDAO roomDAO = new RoomDAO();
+    private final BookingDAO bookingDAO = new BookingDAO();
     private final UserDAO userDAO = new UserDAO();
 
     @Override
@@ -40,55 +46,98 @@ public class BookingServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
+        if (!CsrfTokenUtil.isValid(request.getSession(false), request.getParameter("csrfToken"))) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "The booking form expired. Reload and try again.");
+            return;
+        }
+        Long userId = (Long) request.getSession(false).getAttribute("userId");
         Room room = findRoom(request.getParameter("roomId"));
         if (room == null || !room.isAvailable()) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND, "The selected room is not available.");
             return;
         }
 
-        LocalDate checkIn;
-        LocalDate checkOut;
+        LocalDateTime checkIn;
+        LocalDateTime checkOut;
+        int durationHours;
+        List<String> selectedMeals;
         try {
-            checkIn = LocalDate.parse(request.getParameter("checkIn"));
-            checkOut = LocalDate.parse(request.getParameter("checkOut"));
-        } catch (DateTimeParseException | NullPointerException e) {
-            request.setAttribute("error", "Enter valid check-in and check-out dates.");
-            showBookingForm(request, response, room);
-            return;
-        }
-        long days = java.time.temporal.ChronoUnit.DAYS.between(checkIn, checkOut);
-        if (days < 1) {
-            request.setAttribute("error", "Check-out must be at least one day after check-in.");
-            showBookingForm(request, response, room);
-            return;
-        }
-
-        String username = resolveUsername(request);
-        BigDecimal totalAmount = room.getPricePerNight()
-                .multiply(BigDecimal.valueOf(days))
-                .setScale(2, RoundingMode.HALF_UP);
-
-        try {
-            synchronized (FileStorageUtil.bookingsLock()) {
-                String booking = String.join(",",
-                        FileStorageUtil.toCsvField(username),
-                        FileStorageUtil.toCsvField(room.getRoomNumber()),
-                        checkIn.toString(),
-                        checkOut.toString(),
-                        totalAmount.toPlainString()) + System.lineSeparator();
-                Files.writeString(FileStorageUtil.getBookingsFile(), booking, StandardCharsets.UTF_8,
-                        StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+            LocalDate date = LocalDate.parse(request.getParameter("date"));
+            LocalTime startTime = LocalTime.parse(request.getParameter("startTime"));
+            durationHours = Integer.parseInt(request.getParameter("durationHours"));
+            if (durationHours < 1 || durationHours > 72) {
+                throw new IllegalArgumentException("Invalid duration");
             }
+            checkIn = LocalDateTime.of(date, startTime);
+            checkOut = checkIn.plusHours(durationHours);
+        } catch (DateTimeParseException | IllegalArgumentException | NullPointerException e) {
+            request.setAttribute("error", "Enter a valid date, start time, and duration from 1 to 72 hours.");
+            showBookingForm(request, response, room);
+            return;
+        }
+        try {
+            selectedMeals = BookingPricing.validateSelectedMeals(room,
+                    request.getParameterValues("mealOptions") == null
+                            ? List.of()
+                            : Arrays.asList(request.getParameterValues("mealOptions")));
+        } catch (IllegalArgumentException e) {
+            request.setAttribute("error", e.getMessage());
+            showBookingForm(request, response, room);
+            return;
+        }
+        if (!checkIn.isAfter(LocalDateTime.now())) {
+            request.setAttribute("error", "Choose a future date and start time.");
+            showBookingForm(request, response, room);
+            return;
+        }
+        try {
+            Optional<User> guest = userDAO.findById(userId);
+            if (guest.isEmpty() || "ADMIN".equalsIgnoreCase(guest.get().getRole())) {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN, "A guest account is required to make a booking.");
+                return;
+            }
+
+            Booking booking = new Booking();
+            booking.setUserId(userId);
+            booking.setGuestName(guest.get().getFirstName() + " " + guest.get().getLastName());
+            booking.setGuestEmail(guest.get().getEmail());
+            booking.setRoomId(room.getId());
+            booking.setRoomNumber(room.getRoomNumber());
+            booking.setCheckIn(checkIn);
+            booking.setCheckOut(checkOut);
+            booking.setMealOptions(selectedMeals);
+            booking.setPoolAccess(false);
+            booking.setTotalAmount(BookingPricing.calculate(room, durationHours, selectedMeals));
+            booking.setStatus("ACTIVE");
+            booking.setCreatedAt(LocalDateTime.now());
+
+            if (!bookingDAO.createIfAvailable(booking)) {
+                request.setAttribute("availabilityMessage", "Room is already booked for this time.");
+                request.setAttribute("available", false);
+                request.setAttribute("availabilityClass", "booking-unavailable");
+                showBookingForm(request, response, room);
+                return;
+            }
+
+            if (EmailUtil.isConfigured()) {
+                try {
+                    EmailUtil.sendBookingConfirmation(booking);
+                } catch (MessagingException | IllegalStateException e) {
+                    getServletContext().log("Booking " + booking.getId()
+                            + " was saved, but its confirmation email could not be sent.", e);
+                    request.setAttribute("emailNotice", "Your booking is confirmed, but we could not send the confirmation email.");
+                }
+            } else {
+                getServletContext().log("Booking " + booking.getId()
+                        + " was saved; configure the Gmail app password in EmailUtil to send confirmation email.");
+                request.setAttribute("emailNotice", "Your booking is confirmed. Email notifications are not configured.");
+            }
+
+            request.setAttribute("booking", booking);
+            request.getRequestDispatcher("/booking-success.jsp").forward(request, response);
         } catch (IOException e) {
             throw new ServletException("Unable to save the room booking.", e);
         }
-
-        request.setAttribute("username", username);
-        request.setAttribute("roomName", room.getRoomNumber());
-        request.setAttribute("checkIn", checkIn);
-        request.setAttribute("checkOut", checkOut);
-        request.setAttribute("totalAmount", totalAmount);
-        request.getRequestDispatcher("/booking-success.jsp").forward(request, response);
     }
 
     private Room findRoom(String roomId) throws ServletException {
@@ -97,8 +146,7 @@ public class BookingServlet extends HttpServlet {
         }
         try {
             long id = Long.parseLong(roomId);
-            Optional<Room> room = roomDAO.findById(id);
-            return room.orElse(null);
+            return roomDAO.findById(id).orElse(null);
         } catch (NumberFormatException e) {
             return null;
         } catch (IOException e) {
@@ -106,34 +154,21 @@ public class BookingServlet extends HttpServlet {
         }
     }
 
-    private String resolveUsername(HttpServletRequest request) throws ServletException {
-        jakarta.servlet.http.HttpSession session = request.getSession(false);
-        String username = (String) session.getAttribute("username");
-        if (username == null || username.isBlank()) {
-            username = (String) session.getAttribute("email");
-        }
-        if (username != null && !username.isBlank()) {
-            return username;
-        }
-
-        Object userId = session.getAttribute("userId");
-        if (userId instanceof Long id) {
-            try {
-                return userDAO.findById(id)
-                        .map(user -> user.getEmail())
-                        .filter(email -> email != null && !email.isBlank())
-                        .orElseThrow(() -> new ServletException("Unable to resolve the signed-in user."));
-            } catch (IOException e) {
-                throw new ServletException("Unable to resolve the signed-in user.", e);
-            }
-        }
-        throw new ServletException("The signed-in session does not include a user identity.");
-    }
-
     private void showBookingForm(HttpServletRequest request, HttpServletResponse response, Room room)
             throws ServletException, IOException {
         request.setAttribute("room", room);
-        request.setAttribute("today", LocalDate.now());
+        request.setAttribute("csrfToken", CsrfTokenUtil.getOrCreate(request.getSession(true)));
+        request.setAttribute("minimumDate", LocalDate.now());
+        request.setAttribute("hourlyRate", room.getHourlyRate());
+        List<String> submittedMeals = request.getParameterValues("mealOptions") == null
+                ? List.of()
+                : Arrays.asList(request.getParameterValues("mealOptions"));
+        request.setAttribute("selectedBreakfast", submittedMeals.contains("BREAKFAST")
+                && room.isBreakfastAvailable());
+        request.setAttribute("selectedLunch", submittedMeals.contains("LUNCH")
+                && room.isLunchAvailable());
+        request.setAttribute("selectedDinner", submittedMeals.contains("DINNER")
+                && room.isDinnerAvailable());
         request.getRequestDispatcher("/book-room.jsp").forward(request, response);
     }
 }

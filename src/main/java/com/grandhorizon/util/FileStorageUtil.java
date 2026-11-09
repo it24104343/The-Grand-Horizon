@@ -21,12 +21,12 @@ public final class FileStorageUtil {
     private static final String INITIAL_ADMIN_PASSWORD_HASH =
             "$2a$12$bRF3dTKNEStnEXJB/E6RO.HZI5J3fKc0J4YekscZ6yuAoFmIgblHS";
     private static final String ROOMS_HEADER =
-            "id,roomNumber,roomType,description,capacity,pricePerNight,amenities,available,imageFileName,mealOptions";
+            "id,roomNumber,roomType,description,capacity,pricePerHour,amenities,available,imageFileName,mealOptions";
     private static final String[] INITIAL_ROOMS = {
-            "1,101,STANDARD,\"A calm, thoughtfully appointed room for a restful stay.\",2,145.00,\"Queen bed, rain shower, city view\",true,,",
-            "2,204,STANDARD,\"A spacious room with warm finishes and a comfortable sitting area.\",2,175.00,\"King bed, sitting area, work desk\",true,,",
-            "3,501,LUXURY,\"An elevated suite with premium comforts and panoramic views.\",2,320.00,\"King bed, air conditioning, Wi-Fi, lounge, panoramic view\",true,,",
-            "4,502,LUXURY,\"A generous suite designed for a quieter, more indulgent stay.\",4,410.00,\"Two beds, air conditioning, Wi-Fi, soaking tub, lounge\",true,,"
+            "1,101,NORMAL,\"A calm, thoughtfully appointed room for a restful stay.\",2,1000.00,\"Queen bed, rain shower, city view\",true,,BREAKFAST|LUNCH|DINNER",
+            "2,204,STANDARD,\"A spacious room with warm finishes and a comfortable sitting area.\",2,2000.00,\"King bed, sitting area, work desk\",true,,BREAKFAST|LUNCH|DINNER",
+            "3,501,LUXURY,\"An elevated suite with premium comforts and panoramic views.\",2,3000.00,\"King bed, air conditioning, Wi-Fi, lounge, panoramic view\",true,,BREAKFAST|LUNCH|DINNER",
+            "4,502,LUXURY,\"A generous suite designed for a quieter, more indulgent stay.\",4,3000.00,\"Two beds, air conditioning, Wi-Fi, soaking tub, lounge\",true,,BREAKFAST|LUNCH|DINNER"
     };
 
     private FileStorageUtil() {
@@ -65,7 +65,9 @@ public final class FileStorageUtil {
     public static Path getBookingsFile() throws IOException {
         Path file = getDataDirectory().resolve("bookings.txt");
         synchronized (BOOKINGS_LOCK) {
-            ensureCsvFile(file, "username,room_name,check_in,check_out,total_amount", new String[0]);
+            ensureCsvFile(file,
+                    "bookingId,userId,guestName,guestEmail,roomId,roomNumber,date,startTime,durationHours,mealOptions,poolAccess,totalAmount,status,createdAt",
+                    new String[0]);
         }
         return file;
     }

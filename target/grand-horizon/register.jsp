@@ -11,7 +11,7 @@
 <body class="account-page">
 <nav class="navbar site-nav"><div class="container">
     <a class="navbar-brand brand-mark" href="${pageContext.request.contextPath}/rooms">THE GRAND <span>HORIZON</span></a>
-    <a class="nav-link" href="${pageContext.request.contextPath}/rooms">Back to the hotel</a>
+    <a class="nav-link" href="${pageContext.request.contextPath}/rooms">Back to rooms</a>
 </div></nav>
 <main class="container account-wrap">
     <section class="account-card">

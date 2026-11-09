@@ -1,5 +1,6 @@
 package com.grandhorizon.servlet;
 
+import com.grandhorizon.dao.BookingDAO;
 import com.grandhorizon.dao.RoomDAO;
 import com.grandhorizon.dao.UserDAO;
 import jakarta.servlet.ServletException;
@@ -14,6 +15,7 @@ import java.io.IOException;
 public class HomeServlet extends HttpServlet {
     private final RoomDAO roomDAO = new RoomDAO();
     private final UserDAO userDAO = new UserDAO();
+    private final BookingDAO bookingDAO = new BookingDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -21,6 +23,7 @@ public class HomeServlet extends HttpServlet {
         try {
             request.setAttribute("rooms", roomDAO.findAvailableRooms());
             request.setAttribute("adminEmail", userDAO.findAdminEmail().orElse(""));
+            request.setAttribute("bookingCount", bookingDAO.countCurrent());
             request.getRequestDispatcher("/index.jsp").forward(request, response);
         } catch (IOException e) {
             throw new ServletException("Unable to load available rooms.", e);

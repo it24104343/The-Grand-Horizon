@@ -47,6 +47,8 @@ public class UpdateProfileServlet extends HttpServlet {
             }
             String passwordToSave = password == null || password.isBlank() ? "" : password;
             if (userDAO.updateProfile(userId, firstName, lastName, email, phone, passwordToSave)) {
+                request.getSession(false).setAttribute("email", email.trim().toLowerCase(java.util.Locale.ROOT));
+                request.getSession(false).setAttribute("username", email.trim().toLowerCase(java.util.Locale.ROOT));
                 request.getSession(false).setAttribute("profileNotice", "Your profile has been updated.");
                 response.sendRedirect(request.getContextPath() + "/profile");
             } else {

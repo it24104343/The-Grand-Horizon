@@ -100,25 +100,26 @@ public class RoomDAO {
             try {
                 long id = Long.parseLong(row.get(0));
                 String roomNumber = row.get(1);
-                String roomType = row.get(2);
+                String roomType = row.get(2).toUpperCase(java.util.Locale.ROOT);
                 String description = row.get(3);
                 int capacity = Integer.parseInt(row.get(4));
-                BigDecimal price = new BigDecimal(row.get(5));
+                BigDecimal price = Room.hourlyRateForType(roomType);
                 String amenities = row.get(6);
                 boolean available = Boolean.parseBoolean(row.get(7));
                 String imageFileName = row.size() == 10 ? row.get(8) : "";
-                List<String> mealOptions = row.size() == 10 && !row.get(9).isBlank()
-                        ? List.of(row.get(9).split("\\|"))
-                        : List.of();
-                Room room = "LUXURY".equalsIgnoreCase(roomType)
+                Room room = "LUXURY".equals(roomType)
                         ? new LuxuryRoom(id, roomNumber, description, capacity, price, amenities, available)
                         : new StandardRoom(id, roomNumber, description, capacity, price, amenities, available);
-                room.setRoomType(roomType.toUpperCase(java.util.Locale.ROOT));
+                room.setRoomType(roomType);
                 room.setImageFileName(imageFileName);
-                room.setMealOptions(mealOptions);
+                if (row.size() == 8) {
+                    room.setMealOptions(List.of("BREAKFAST", "LUNCH", "DINNER"));
+                } else {
+                    room.setMeals(row.get(9));
+                }
                 rooms.add(room);
-            } catch (NumberFormatException e) {
-                throw new IOException("Invalid number in room CSV row " + (index + 1) + " in " + file, e);
+            } catch (IllegalArgumentException e) {
+                throw new IOException("Invalid value in room CSV row " + (index + 1) + " in " + file, e);
             }
         }
         return rooms;
@@ -126,7 +127,7 @@ public class RoomDAO {
 
     private void writeRooms(Path file, List<Room> rooms) throws IOException {
         List<String> rows = new ArrayList<>();
-        rows.add("id,roomNumber,roomType,description,capacity,pricePerNight,amenities,available,imageFileName,mealOptions");
+        rows.add("id,roomNumber,roomType,description,capacity,pricePerHour,amenities,available,imageFileName,mealOptions");
         for (Room room : rooms) {
             rows.add(String.join(",",
                     Long.toString(room.getId()),
@@ -134,11 +135,11 @@ public class RoomDAO {
                     FileStorageUtil.toCsvField(room.getRoomType()),
                     FileStorageUtil.toCsvField(room.getDescription()),
                     Integer.toString(room.getCapacity()),
-                    FileStorageUtil.toCsvField(room.getPricePerNight().toPlainString()),
+                    FileStorageUtil.toCsvField(room.getHourlyRate().toPlainString()),
                     FileStorageUtil.toCsvField(room.getAmenities()),
                     Boolean.toString(room.isAvailable()),
                     FileStorageUtil.toCsvField(room.getImageFileName()),
-                    FileStorageUtil.toCsvField(String.join("|", room.getMealOptions()))));
+                    FileStorageUtil.toCsvField(room.getMeals())));
         }
         FileStorageUtil.writeAtomically(file, rows);
     }

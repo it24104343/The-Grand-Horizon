@@ -61,12 +61,23 @@ public class LoginServlet extends HttpServlet {
             }
 
             String destination = "Admin".equals(identity.role())
-                    ? "/admin-dashboard.jsp"
-                    : "/rooms";
+                    ? "/rooms"
+                    : safeRedirect(request.getParameter("redirect"));
+            if (destination == null) {
+                destination = "/rooms";
+            }
             response.sendRedirect(request.getContextPath() + destination);
         } catch (IOException | IllegalArgumentException e) {
             throw new ServletException("Unable to authenticate user.", e);
         }
+    }
+
+    private String safeRedirect(String redirect) {
+        if (redirect == null || !redirect.startsWith("/booking?roomId=")
+                || redirect.contains("\\") || redirect.contains("\r") || redirect.contains("\n")) {
+            return null;
+        }
+        return redirect;
     }
 
     private Optional<Identity> authenticate(String identifier, String password) throws IOException {

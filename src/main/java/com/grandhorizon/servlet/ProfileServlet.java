@@ -1,7 +1,9 @@
 package com.grandhorizon.servlet;
 
 import com.grandhorizon.dao.UserDAO;
+import com.grandhorizon.dao.BookingDAO;
 import com.grandhorizon.model.User;
+import com.grandhorizon.util.CsrfTokenUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -14,6 +16,7 @@ import java.util.Optional;
 @WebServlet("/profile")
 public class ProfileServlet extends HttpServlet {
     private final UserDAO userDAO = new UserDAO();
+    private final BookingDAO bookingDAO = new BookingDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -27,6 +30,8 @@ public class ProfileServlet extends HttpServlet {
                 return;
             }
             request.setAttribute("user", user.get());
+            request.setAttribute("bookings", bookingDAO.findForUser(userId));
+            request.setAttribute("csrfToken", CsrfTokenUtil.getOrCreate(request.getSession(false)));
             request.getRequestDispatcher("/WEB-INF/views/profile.jsp").forward(request, response);
         } catch (IOException e) {
             throw new ServletException("Unable to load user profile.", e);

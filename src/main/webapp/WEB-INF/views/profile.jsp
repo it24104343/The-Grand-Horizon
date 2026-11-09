@@ -10,13 +10,12 @@
     <link href="${pageContext.request.contextPath}/assets/css/style.css" rel="stylesheet">
 </head>
 <body class="account-page">
-<nav class="navbar navbar-expand-lg site-nav">
-    <div class="container">
-        <a class="navbar-brand brand-mark" href="${pageContext.request.contextPath}/rooms">THE GRAND <span>HORIZON</span></a>
-        <a class="nav-link" href="${pageContext.request.contextPath}/rooms">Return to rooms</a>
-    </div>
-</nav>
+<nav class="navbar site-nav"><div class="container">
+    <a class="navbar-brand brand-mark" href="${pageContext.request.contextPath}/rooms">THE GRAND <span>HORIZON</span></a>
+    <a class="nav-link" href="${pageContext.request.contextPath}/rooms">Back to rooms</a>
+</div></nav>
 <main class="container account-wrap">
+    <div class="profile-layout">
     <section class="account-card profile-card">
         <p class="eyebrow">GUEST ACCOUNT</p>
         <h1>Your profile</h1>
@@ -25,6 +24,10 @@
         <c:if test="${not empty sessionScope.profileNotice}">
             <div class="alert alert-success" role="status"><c:out value="${sessionScope.profileNotice}"/></div>
             <c:remove var="profileNotice" scope="session"/>
+        </c:if>
+        <c:if test="${not empty sessionScope.bookingNotice}">
+            <div class="alert alert-info" role="status"><c:out value="${sessionScope.bookingNotice}"/></div>
+            <c:remove var="bookingNotice" scope="session"/>
         </c:if>
         <form method="post" action="${pageContext.request.contextPath}/profile/update">
             <div class="row g-3">
@@ -54,6 +57,53 @@
             <button class="btn btn-link muted-copy" type="submit">Sign out</button>
         </form>
     </section>
+    <c:if test="${sessionScope.role ne 'Admin' and sessionScope.role ne 'ADMIN'}">
+        <section class="account-card profile-card">
+            <p class="eyebrow">YOUR STAYS</p>
+            <h2 class="profile-section-title">My Bookings</h2>
+            <c:choose>
+                <c:when test="${not empty bookings}">
+                    <div class="booking-list">
+                        <c:forEach var="booking" items="${bookings}">
+                            <article class="booking-history-card">
+                                <div class="d-flex flex-wrap justify-content-between gap-2">
+                                    <h3 class="h5 mb-1">Room <c:out value="${booking.roomNumber}"/></h3>
+                                    <c:choose>
+                                        <c:when test="${booking.cancelled}"><span class="booking-status status-cancelled">Cancelled</span></c:when>
+                                        <c:when test="${booking.completed}"><span class="booking-status status-completed">Completed</span></c:when>
+                                        <c:otherwise><span class="booking-status status-active">Active</span></c:otherwise>
+                                    </c:choose>
+                                </div>
+                                <p class="muted-copy mb-2">
+                                    <c:out value="${booking.bookingDate}"/> at <c:out value="${booking.startTime}"/> ·
+                                    <c:out value="${booking.durationHours}"/> hour(s) ·
+                                    Rs. <c:out value="${booking.totalAmount}"/>
+                                </p>
+                                <c:if test="${booking.status eq 'ACTIVE' and not booking.completed}">
+                                    <p class="booking-countdown">
+                                        <c:choose>
+                                            <c:when test="${booking.daysRemaining gt 0}"><c:out value="${booking.daysRemaining}"/> day(s) remaining</c:when>
+                                            <c:otherwise>Ends today</c:otherwise>
+                                        </c:choose>
+                                    </p>
+                                </c:if>
+                                <c:if test="${booking.cancellable}">
+                                    <form method="post" action="${pageContext.request.contextPath}/booking/cancel"
+                                          onsubmit="return confirm('Cancel this upcoming booking?');">
+                                        <input type="hidden" name="bookingId" value="<c:out value='${booking.id}'/>">
+                                        <input type="hidden" name="csrfToken" value="<c:out value='${csrfToken}'/>">
+                                        <button class="btn btn-outline-danger btn-sm" type="submit">Cancel booking</button>
+                                    </form>
+                                </c:if>
+                            </article>
+                        </c:forEach>
+                    </div>
+                </c:when>
+                <c:otherwise><p class="muted-copy mb-0">You do not have any bookings yet.</p></c:otherwise>
+            </c:choose>
+        </section>
+    </c:if>
+    </div>
 </main>
 </body>
 </html>

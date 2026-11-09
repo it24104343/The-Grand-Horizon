@@ -13,7 +13,7 @@ import java.io.IOException;
 
 @WebFilter(urlPatterns = {
         "/profile", "/profile/update", "/profile/delete",
-        "/booking", "/book-room.jsp", "/admin-dashboard.jsp", "/admin/*"
+        "/booking", "/booking/cancel", "/book-room.jsp", "/admin-dashboard.jsp", "/admin/*"
 })
 public class AuthenticationFilter implements Filter {
     @Override
@@ -22,8 +22,14 @@ public class AuthenticationFilter implements Filter {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         HttpServletResponse response = (HttpServletResponse) servletResponse;
         jakarta.servlet.http.HttpSession session = request.getSession(false);
-        if (session == null
-                || (session.getAttribute("userId") == null && session.getAttribute("username") == null)) {
+        String path = request.getServletPath();
+        boolean adminPath = path.equals("/admin-dashboard.jsp") || path.startsWith("/admin/");
+        boolean userPath = path.startsWith("/profile") || path.equals("/booking/cancel")
+                || path.equals("/book-room.jsp");
+        boolean bookingSubmission = path.equals("/booking") && "POST".equalsIgnoreCase(request.getMethod());
+        if ((adminPath || userPath || bookingSubmission)
+                && (session == null
+                || (session.getAttribute("userId") == null && session.getAttribute("username") == null))) {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
@@ -32,16 +38,25 @@ public class AuthenticationFilter implements Filter {
             response.sendRedirect(request.getContextPath() + "/rooms");
             return;
         }
-        if (request.getServletPath().startsWith("/profile")
+        if ((bookingSubmission || path.equals("/booking/cancel"))
+                && session.getAttribute("userId") == null) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN,
+                    "A registered guest account is required to make a booking.");
+            return;
+        }
+        if (path.startsWith("/profile")
                 && session.getAttribute("userId") == null) {
             response.sendRedirect(request.getContextPath() + "/rooms");
             return;
         }
-        if ((request.getServletPath().equals("/admin-dashboard.jsp")
-                || request.getServletPath().startsWith("/admin/"))
+        if (adminPath
                 && !"Admin".equals(session.getAttribute("role"))
                 && !"ADMIN".equals(session.getAttribute("role"))) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
+        if (path.equals("/admin-dashboard.jsp")) {
+            response.sendRedirect(request.getContextPath() + "/admin/dashboard");
             return;
         }
         chain.doFilter(request, response);
