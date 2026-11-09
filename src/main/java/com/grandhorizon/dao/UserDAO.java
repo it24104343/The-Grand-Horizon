@@ -53,6 +53,16 @@ public class UserDAO {
         }
     }
 
+    public Optional<String> findAdminEmail() throws IOException {
+        synchronized (FileStorageUtil.usersLock()) {
+            return readUsers(FileStorageUtil.getUsersFile()).stream()
+                    .filter(user -> "ADMIN".equalsIgnoreCase(user.getRole()))
+                    .map(User::getEmail)
+                    .filter(email -> email != null && !email.isBlank())
+                    .findFirst();
+        }
+    }
+
     public boolean updateProfile(long id, String firstName, String lastName,
                                  String email, String phone, String newPassword) throws IOException {
         synchronized (FileStorageUtil.usersLock()) {

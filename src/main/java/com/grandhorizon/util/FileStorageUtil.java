@@ -21,12 +21,12 @@ public final class FileStorageUtil {
     private static final String INITIAL_ADMIN_PASSWORD_HASH =
             "$2a$12$bRF3dTKNEStnEXJB/E6RO.HZI5J3fKc0J4YekscZ6yuAoFmIgblHS";
     private static final String ROOMS_HEADER =
-            "id,roomNumber,roomType,description,capacity,pricePerNight,amenities,available";
+            "id,roomNumber,roomType,description,capacity,pricePerNight,amenities,available,imageFileName,mealOptions";
     private static final String[] INITIAL_ROOMS = {
-            "1,101,STANDARD,\"A calm, thoughtfully appointed room for a restful stay.\",2,145.00,\"Queen bed, rain shower, city view\",true",
-            "2,204,STANDARD,\"A spacious room with warm finishes and a comfortable sitting area.\",2,175.00,\"King bed, sitting area, work desk\",true",
-            "3,501,LUXURY,\"An elevated suite with premium comforts and panoramic views.\",2,320.00,\"King bed, air conditioning, Wi-Fi, lounge, panoramic view\",true",
-            "4,502,LUXURY,\"A generous suite designed for a quieter, more indulgent stay.\",4,410.00,\"Two beds, air conditioning, Wi-Fi, soaking tub, lounge\",true"
+            "1,101,STANDARD,\"A calm, thoughtfully appointed room for a restful stay.\",2,145.00,\"Queen bed, rain shower, city view\",true,,",
+            "2,204,STANDARD,\"A spacious room with warm finishes and a comfortable sitting area.\",2,175.00,\"King bed, sitting area, work desk\",true,,",
+            "3,501,LUXURY,\"An elevated suite with premium comforts and panoramic views.\",2,320.00,\"King bed, air conditioning, Wi-Fi, lounge, panoramic view\",true,,",
+            "4,502,LUXURY,\"A generous suite designed for a quieter, more indulgent stay.\",4,410.00,\"Two beds, air conditioning, Wi-Fi, soaking tub, lounge\",true,,"
     };
 
     private FileStorageUtil() {

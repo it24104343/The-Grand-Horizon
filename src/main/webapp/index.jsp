@@ -1,5 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -22,7 +23,8 @@
         </button>
         <div class="collapse navbar-collapse" id="mainNav">
             <div class="navbar-nav ms-auto align-items-lg-center gap-lg-4">
-                <a class="nav-link" href="#rooms">The rooms</a>
+                <a class="nav-link" href="#rooms">Rooms</a>
+                <a class="nav-link" id="about-toggle" href="#about-details" aria-controls="about-details" aria-expanded="false">About Us</a>
                 <c:choose>
                     <c:when test="${not empty sessionScope.userId}">
                         <a class="nav-link" href="${pageContext.request.contextPath}/profile">My profile</a>
@@ -42,6 +44,21 @@
         </div>
     </div>
 </nav>
+<section class="about-panel" id="about-details" aria-label="About The Grand Horizon" hidden>
+    <div class="container d-flex flex-column flex-md-row justify-content-between gap-3">
+        <div><p class="eyebrow mb-2">ABOUT THE HOTEL</p><h2 class="h5 mb-0">The Grand Horizon</h2></div>
+        <address class="about-contact mb-0">
+            <span>Colombo</span>
+            <a href="tel:0763324464">0763324464</a>
+            <c:choose>
+                <c:when test="${not empty adminEmail}">
+                    <a href="mailto:${fn:escapeXml(adminEmail)}"><c:out value="${adminEmail}"/></a>
+                </c:when>
+                <c:otherwise><span>Email contact unavailable</span></c:otherwise>
+            </c:choose>
+        </address>
+    </div>
+</section>
 <header class="hero">
     <div class="hero-shade"></div>
     <div class="container hero-content">
@@ -76,6 +93,9 @@
                     <div class="col-md-6">
                         <article class="room-card">
                             <div class="room-image ${room.roomType eq 'LUXURY' ? 'room-image-luxury' : 'room-image-standard'}">
+                                <c:if test="${not empty room.imageFileName}">
+                                    <img class="room-photo" src="${pageContext.request.contextPath}/room-image?file=${room.imageFileName}" alt="Room <c:out value='${room.roomNumber}'/>">
+                                </c:if>
                                 <span class="room-tag"><c:out value="${room.roomType eq 'LUXURY' ? 'THE SUITE COLLECTION' : 'THE HORIZON COLLECTION'}"/></span>
                                 <span class="room-number">ROOM <c:out value="${room.roomNumber}"/></span>
                             </div>
@@ -86,6 +106,14 @@
                                     <p class="room-price"><strong>Rs. <c:out value="${room.pricePerNight}"/></strong><span> / night</span></p>
                                 </div>
                                 <p class="room-meta"><c:out value="${room.capacity}"/> guests <span>·</span> <c:out value="${room.amenities}"/></p>
+                                <c:if test="${not empty room.mealOptions}">
+                                    <p class="room-meal-list">
+                                        <c:if test="${room.breakfastAvailable}"><span>Breakfast</span></c:if>
+                                        <c:if test="${room.lunchAvailable}"><span>Lunch</span></c:if>
+                                        <c:if test="${room.dinnerAvailable}"><span>Dinner</span></c:if>
+                                        available
+                                    </p>
+                                </c:if>
                                 <c:choose>
                                     <c:when test="${not empty sessionScope.userId or not empty sessionScope.username}">
                                         <a class="text-link" href="${pageContext.request.contextPath}/booking?roomId=${room.id}">Book this room <span aria-hidden="true">→</span></a>
@@ -113,5 +141,18 @@
     </div>
 </footer>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const aboutToggle = document.getElementById('about-toggle');
+    const aboutDetails = document.getElementById('about-details');
+    aboutToggle.addEventListener('click', (event) => {
+        event.preventDefault();
+        const isExpanded = aboutToggle.getAttribute('aria-expanded') === 'true';
+        aboutDetails.hidden = isExpanded;
+        aboutToggle.setAttribute('aria-expanded', String(!isExpanded));
+        if (!isExpanded) {
+            aboutDetails.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    });
+</script>
 </body>
 </html>

@@ -1,6 +1,8 @@
 package com.grandhorizon.model;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Room {
     private long id;
@@ -11,6 +13,8 @@ public class Room {
     private BigDecimal pricePerNight;
     private String amenities;
     private boolean available;
+    private String imageFileName = "";
+    private List<String> mealOptions = new ArrayList<>();
 
     public Room() {
     }
@@ -53,4 +57,17 @@ public class Room {
     public void setAmenities(String amenities) { this.amenities = amenities; }
     public boolean isAvailable() { return available; }
     public void setAvailable(boolean available) { this.available = available; }
+    public String getImageFileName() {
+        return imageFileName.matches("[0-9a-f]{32}\\.png") ? imageFileName : "";
+    }
+    public void setImageFileName(String imageFileName) {
+        this.imageFileName = imageFileName == null ? "" : imageFileName;
+    }
+    public List<String> getMealOptions() { return List.copyOf(mealOptions); }
+    public void setMealOptions(List<String> mealOptions) {
+        this.mealOptions = mealOptions == null ? new ArrayList<>() : new ArrayList<>(mealOptions);
+    }
+    public boolean isBreakfastAvailable() { return mealOptions.contains("BREAKFAST"); }
+    public boolean isLunchAvailable() { return mealOptions.contains("LUNCH"); }
+    public boolean isDinnerAvailable() { return mealOptions.contains("DINNER"); }
 }
