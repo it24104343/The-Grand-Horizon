@@ -13,6 +13,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
+// RoomDAO manages the persistence of room records, including listing available rooms and updating room details.
 public class RoomDAO {
     public List<Room> findAvailableRooms() throws IOException {
         synchronized (FileStorageUtil.roomsLock()) {

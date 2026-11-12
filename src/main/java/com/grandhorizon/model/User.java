@@ -1,5 +1,6 @@
 package com.grandhorizon.model;
 
+// User stores the shared account information for both guests and administrators.
 public class User {
     private long id;
     private String firstName;

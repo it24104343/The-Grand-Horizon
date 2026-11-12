@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.util.Optional;
 
 @WebServlet("/admin/dashboard")
+// AdminDashboardServlet loads the admin homepage and passes the current booking summary to the dashboard view.
 public class AdminDashboardServlet extends HttpServlet {
     private final BookingDAO bookingDAO = new BookingDAO();
     private final UserDAO userDAO = new UserDAO();

@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class FileStorageUtil {
+    // Central file-access utility for the app. It defines where the CSV data lives, creates default files,
+    // and provides thread-safe read/write helpers for users, rooms, and bookings.
     private static final String DATA_DIRECTORY_PROPERTY = "grandhorizon.data.dir";
     private static final Object USERS_LOCK = new Object();
     private static final Object ROOMS_LOCK = new Object();
@@ -33,6 +35,7 @@ public final class FileStorageUtil {
     }
 
     public static Path getDataDirectory() {
+        // The project stores its data under a configurable folder, defaulting to a hidden folder in the user's home directory.
         String configuredDirectory = System.getProperty(DATA_DIRECTORY_PROPERTY);
         if (configuredDirectory != null && !configuredDirectory.isBlank()) {
             return Path.of(configuredDirectory).toAbsolutePath().normalize();
@@ -85,6 +88,7 @@ public final class FileStorageUtil {
     }
 
     public static List<List<String>> readCsv(Path file) throws IOException {
+        // Read a CSV file into rows and columns, supporting quoted values and escaped double quotes.
         List<List<String>> records = new ArrayList<>();
         try (BufferedReader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
             List<String> record = new ArrayList<>();
@@ -155,6 +159,7 @@ public final class FileStorageUtil {
     }
 
     public static String toCsvField(String value) {
+        // Escape commas and quotes so values remain valid CSV fields when written back to disk.
         String safeValue = value == null ? "" : value;
         if (safeValue.indexOf(',') >= 0 || safeValue.indexOf('"') >= 0
                 || safeValue.indexOf('\n') >= 0 || safeValue.indexOf('\r') >= 0) {
@@ -164,6 +169,7 @@ public final class FileStorageUtil {
     }
 
     public static void writeAtomically(Path destination, List<String> lines) throws IOException {
+        // Write a temporary file first and then replace the real data file, reducing the chance of partial saves.
         Path temporary = Files.createTempFile(destination.getParent(), destination.getFileName().toString(), ".tmp");
         try {
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(temporary.toFile(), StandardCharsets.UTF_8))) {

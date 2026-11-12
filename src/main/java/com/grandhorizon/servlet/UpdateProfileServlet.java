@@ -13,6 +13,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 @WebServlet("/profile/update")
+// UpdateProfileServlet validates edits to the user's personal details and saves the new profile.
 public class UpdateProfileServlet extends HttpServlet {
     private static final Pattern EMAIL = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
     private final UserDAO userDAO = new UserDAO();

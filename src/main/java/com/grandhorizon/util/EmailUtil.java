@@ -12,6 +12,7 @@ import jakarta.mail.internet.MimeMessage;
 
 import java.util.Properties;
 
+// EmailUtil sends booking confirmation emails to the guest using the configured Gmail SMTP settings.
 public final class EmailUtil {
     private static final String SMTP_HOST = "smtp.gmail.com";
     private static final String SMTP_PORT = "587";

@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 @WebServlet("/rooms")
+// HomeServlet loads the room listing page and passes the current booking counts to the JSP.
 public class HomeServlet extends HttpServlet {
     private final RoomDAO roomDAO = new RoomDAO();
     private final UserDAO userDAO = new UserDAO();

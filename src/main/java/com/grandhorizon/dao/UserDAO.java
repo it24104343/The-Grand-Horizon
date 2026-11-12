@@ -14,7 +14,10 @@ import java.util.Locale;
 import java.util.Optional;
 
 public class UserDAO {
+    // DAO layer for the user/account data store. This class handles registration, login checks,
+    // profile updates, and account deletion using the app's CSV-backed file storage.
     public boolean createGuest(Guest guest, String password) throws IOException {
+        // Register a new guest by checking for duplicates, hashing the password, and saving the user record.
         synchronized (FileStorageUtil.usersLock()) {
             Path usersFile = FileStorageUtil.getUsersFile();
             List<User> records = readUsers(usersFile);
@@ -36,6 +39,7 @@ public class UserDAO {
     }
 
     public Optional<User> authenticate(String email, String password) throws IOException {
+        // Validate the supplied email and password against the stored user data, returning the matched account.
         synchronized (FileStorageUtil.usersLock()) {
             String normalizedEmail = normalizeEmail(email);
             return readUsers(FileStorageUtil.getUsersFile()).stream()
@@ -65,6 +69,7 @@ public class UserDAO {
 
     public boolean updateProfile(long id, String firstName, String lastName,
                                  String email, String phone, String newPassword) throws IOException {
+        // Update the selected user's personal details while preventing duplicate email addresses.
         synchronized (FileStorageUtil.usersLock()) {
             Path usersFile = FileStorageUtil.getUsersFile();
             List<User> users = readUsers(usersFile);
@@ -94,6 +99,7 @@ public class UserDAO {
     }
 
     public boolean deleteAccount(long id, String password) throws IOException {
+        // Remove a user account only after confirming the current password, which prevents accidental deletion.
         synchronized (FileStorageUtil.usersLock()) {
             Path usersFile = FileStorageUtil.getUsersFile();
             List<User> users = readUsers(usersFile);
@@ -108,6 +114,7 @@ public class UserDAO {
     }
 
     private List<User> readUsers(Path file) throws IOException {
+        // Read every user row from the CSV file and convert it back into the model objects used by the application.
         List<User> users = new ArrayList<>();
         List<List<String>> rows = FileStorageUtil.readCsv(file);
         for (int index = 0; index < rows.size(); index++) {
@@ -137,6 +144,7 @@ public class UserDAO {
     }
 
     private void writeUsers(Path file, List<User> users) throws IOException {
+        // Persist the updated user list back to the CSV file with the standard header and field escaping.
         List<String> rows = new ArrayList<>();
         rows.add("id,firstName,lastName,email,passwordHash,phone,role");
         for (User user : users) {

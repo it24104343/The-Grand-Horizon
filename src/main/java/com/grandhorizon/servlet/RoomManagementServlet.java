@@ -25,6 +25,7 @@ import java.util.Set;
 
 @WebServlet("/admin/rooms")
 @MultipartConfig(maxFileSize = 5 * 1024 * 1024, maxRequestSize = 6 * 1024 * 1024)
+// RoomManagementServlet lets the admin create, edit, and delete rooms, including image uploads.
 public class RoomManagementServlet extends HttpServlet {
     private final RoomDAO roomDAO = new RoomDAO();
 

@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 @WebServlet("/room-image")
+// RoomImageServlet serves a stored room image file to the browser when the JSP displays the room card.
 public class RoomImageServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)

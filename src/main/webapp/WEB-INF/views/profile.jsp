@@ -10,6 +10,7 @@
     <link href="${pageContext.request.contextPath}/assets/css/style.css" rel="stylesheet">
 </head>
 <body class="account-page">
+<%-- Profile page for guests. It shows personal details, booking history, and options to edit or delete the account. --%>
 <nav class="navbar site-nav"><div class="container">
     <a class="navbar-brand brand-mark" href="${pageContext.request.contextPath}/rooms">THE GRAND <span>HORIZON</span></a>
     <a class="nav-link" href="${pageContext.request.contextPath}/rooms">Back to rooms</a>

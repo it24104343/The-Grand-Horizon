@@ -8,6 +8,7 @@ import jakarta.servlet.annotation.WebListener;
 import java.io.IOException;
 
 @WebListener
+// This listener initializes the default user data when the web application starts.
 public class ApplicationStartupListener implements ServletContextListener {
     @Override
     public void contextInitialized(ServletContextEvent event) {

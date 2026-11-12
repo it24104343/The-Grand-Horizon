@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.UUID;
 
+// CsrfTokenUtil protects form submissions by creating and checking a session-based token.
 public final class CsrfTokenUtil {
     private static final String SESSION_ATTRIBUTE = CsrfTokenUtil.class.getName() + ".token";
 

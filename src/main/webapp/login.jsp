@@ -9,6 +9,7 @@
     <link href="${pageContext.request.contextPath}/assets/css/style.css" rel="stylesheet">
 </head>
 <body class="account-page">
+<%-- Login page for existing users. It collects the email/username and password before submitting to the login servlet. --%>
 <nav class="navbar site-nav"><div class="container">
     <a class="navbar-brand brand-mark" href="${pageContext.request.contextPath}/rooms">THE GRAND <span>HORIZON</span></a>
     <a class="nav-link" href="${pageContext.request.contextPath}/rooms">Back to rooms</a>

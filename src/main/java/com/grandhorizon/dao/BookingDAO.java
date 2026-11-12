@@ -17,6 +17,7 @@ import java.util.Locale;
 import java.util.Optional;
 
 public class BookingDAO {
+    // Booking DAO: it reads the booking CSV, checks room availability, and updates the reservation records.
     public boolean isAvailable(long roomId, String roomNumber,
                                LocalDateTime checkIn, LocalDateTime checkOut)
             throws IOException {
@@ -31,6 +32,7 @@ public class BookingDAO {
     }
 
     public boolean createIfAvailable(Booking booking) throws IOException {
+        // Save a booking only if the room is free across the selected time range; this prevents overlapping reservations.
         synchronized (FileStorageUtil.bookingsLock()) {
             Path file = FileStorageUtil.getBookingsFile();
             List<Booking> bookings = readBookings(file);
@@ -52,6 +54,7 @@ public class BookingDAO {
     }
 
     public List<Booking> findForUser(long userId) throws IOException {
+        // Return the booking history for a user, newest reservations first.
         synchronized (FileStorageUtil.bookingsLock()) {
             return readBookings(FileStorageUtil.getBookingsFile()).stream()
                     .filter(booking -> booking.getUserId() == userId)
@@ -61,6 +64,7 @@ public class BookingDAO {
     }
 
     public List<Booking> findCurrent() throws IOException {
+        // List active bookings for the admin dashboard and current occupancy checks.
         synchronized (FileStorageUtil.bookingsLock()) {
             return readBookings(FileStorageUtil.getBookingsFile()).stream()
                     .filter(booking -> "ACTIVE".equals(booking.getStatus()))
@@ -87,6 +91,7 @@ public class BookingDAO {
     }
 
     public Optional<Booking> cancelUpcoming(long bookingId, long userId) throws IOException {
+        // Cancel only a user-owned booking that is still cancellable, then persist the status change.
         synchronized (FileStorageUtil.bookingsLock()) {
             Path file = FileStorageUtil.getBookingsFile();
             List<Booking> bookings = readBookings(file);
@@ -104,10 +109,12 @@ public class BookingDAO {
     }
 
     private boolean overlaps(Booking existing, LocalDateTime checkIn, LocalDateTime checkOut) {
+        // Two bookings overlap when their date/time ranges intersect at any time.
         return existing.getCheckIn().isBefore(checkOut) && existing.getCheckOut().isAfter(checkIn);
     }
 
     private List<Booking> readBookings(Path file) throws IOException {
+        // Convert each CSV row into a Booking object and handle old file formats for compatibility.
         List<Booking> bookings = new ArrayList<>();
         List<List<String>> rows = FileStorageUtil.readCsv(file);
         for (int index = 0; index < rows.size(); index++) {
@@ -204,6 +211,7 @@ public class BookingDAO {
     }
 
     private void writeBookings(Path file, List<Booking> bookings) throws IOException {
+        // Save all booking records back to the CSV file in a consistent format for later reading.
         List<String> rows = new ArrayList<>();
         rows.add("bookingId,userId,guestName,guestEmail,roomId,roomNumber,date,startTime,durationHours,mealOptions,poolAccess,totalAmount,status,createdAt");
         for (Booking booking : bookings) {

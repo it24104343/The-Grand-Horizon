@@ -10,10 +10,13 @@
     <link href="${pageContext.request.contextPath}/assets/css/style.css" rel="stylesheet">
 </head>
 <body class="account-page">
+<%-- This JSP represents the admin landing page in the MVC flow: it reads the session user and
+     presents quick actions for managing bookings and rooms. --%>
 <nav class="navbar site-nav"><div class="container">
     <a class="navbar-brand brand-mark" href="${pageContext.request.contextPath}/rooms">THE GRAND <span>HORIZON</span></a>
     <a class="nav-link" href="${pageContext.request.contextPath}/rooms">Back to rooms</a>
 </div></nav>
+<%-- Main content area for the administrator dashboard, showing personal details and navigation links. --%>
 <main class="container account-wrap">
     <section class="account-card">
         <p class="eyebrow">ADMINISTRATION</p>

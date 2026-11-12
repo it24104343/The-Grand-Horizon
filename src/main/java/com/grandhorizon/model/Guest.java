@@ -1,5 +1,6 @@
 package com.grandhorizon.model;
 
+// Guest represents the normal end-user account used for registration, booking, and profile management.
 public class Guest extends User {
     public Guest() {
         setRole("GUEST");

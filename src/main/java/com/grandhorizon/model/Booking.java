@@ -1,6 +1,8 @@
 package com.grandhorizon.model;
 
 import java.math.BigDecimal;
+
+// Booking stores the reservation details, time range, meals, and total amount for one room booking.
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.time.format.DateTimeFormatter;
@@ -52,6 +54,7 @@ public class Booking {
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
+    // Return the length of the stay in hours so the booking total can be calculated correctly.
     public long getDurationHours() {
         return java.time.Duration.between(checkIn, checkOut).toHours();
     }

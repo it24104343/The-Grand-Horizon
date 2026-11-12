@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Optional;
 
 @WebServlet("/booking/availability")
+// BookingAvailabilityServlet checks whether a room is free for the requested booking slot and returns JSON for the UI.
 public class BookingAvailabilityServlet extends HttpServlet {
     private final BookingDAO bookingDAO = new BookingDAO();
     private final RoomDAO roomDAO = new RoomDAO();

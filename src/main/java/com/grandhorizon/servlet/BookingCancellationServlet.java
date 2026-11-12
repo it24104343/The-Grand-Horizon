@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.util.Optional;
 
 @WebServlet("/booking/cancel")
+// BookingCancellationServlet handles user booking cancellations and sends admin alerts when configured.
 public class BookingCancellationServlet extends HttpServlet {
     private final BookingDAO bookingDAO = new BookingDAO();
     private final UserDAO userDAO = new UserDAO();

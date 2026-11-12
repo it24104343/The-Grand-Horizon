@@ -9,6 +9,7 @@
     <link href="${pageContext.request.contextPath}/assets/css/style.css" rel="stylesheet">
 </head>
 <body class="account-page">
+<%-- Registration page for new guests. It validates personal information and password confirmation before creating an account. --%>
 <nav class="navbar site-nav"><div class="container">
     <a class="navbar-brand brand-mark" href="${pageContext.request.contextPath}/rooms">THE GRAND <span>HORIZON</span></a>
     <a class="nav-link" href="${pageContext.request.contextPath}/rooms">Back to rooms</a>

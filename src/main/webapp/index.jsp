@@ -15,6 +15,7 @@
     <link href="${pageContext.request.contextPath}/assets/css/style.css" rel="stylesheet">
 </head>
 <body>
+<%-- This page is the public landing page for the hotel website, showing available rooms and booking options. --%>
 <nav class="navbar navbar-expand-lg site-nav">
     <div class="container">
         <a class="navbar-brand brand-mark" href="${pageContext.request.contextPath}/rooms">THE GRAND <span>HORIZON</span></a>

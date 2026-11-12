@@ -27,6 +27,8 @@ import java.util.Optional;
 
 @WebServlet("/booking")
 public class BookingServlet extends HttpServlet {
+    // Controller for the booking flow: it fetches room data, validates input, and decides whether
+    // to show a booking form or save a new reservation before forwarding to the JSP view.
     private final RoomDAO roomDAO = new RoomDAO();
     private final BookingDAO bookingDAO = new BookingDAO();
     private final UserDAO userDAO = new UserDAO();
@@ -34,6 +36,7 @@ public class BookingServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        // When a user opens the booking page, load the selected room and reject invalid or unavailable rooms.
         Room room = findRoom(request.getParameter("roomId"));
         if (room == null || !room.isAvailable()) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND, "The selected room is not available.");
@@ -45,6 +48,7 @@ public class BookingServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        // Prevent cross-site submit attacks and validate that the form is still using a valid session.
         request.setCharacterEncoding("UTF-8");
         if (!CsrfTokenUtil.isValid(request.getSession(false), request.getParameter("csrfToken"))) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "The booking form expired. Reload and try again.");
@@ -57,6 +61,7 @@ public class BookingServlet extends HttpServlet {
             return;
         }
 
+        // Convert the selected date and time inputs into a real booking window and enforce the valid stay duration.
         LocalDateTime checkIn;
         LocalDateTime checkOut;
         int durationHours;
@@ -76,6 +81,7 @@ public class BookingServlet extends HttpServlet {
             return;
         }
         try {
+            // Only accept meal choices that are actually offered for this room, preserving a valid order.
             selectedMeals = BookingPricing.validateSelectedMeals(room,
                     request.getParameterValues("mealOptions") == null
                             ? List.of()
@@ -91,12 +97,14 @@ public class BookingServlet extends HttpServlet {
             return;
         }
         try {
+            // Confirm the current user is a real guest account before creating the reservation record.
             Optional<User> guest = userDAO.findById(userId);
             if (guest.isEmpty() || "ADMIN".equalsIgnoreCase(guest.get().getRole())) {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "A guest account is required to make a booking.");
                 return;
             }
 
+            // Build a booking object from the validated form data and calculate the final amount for the stay.
             Booking booking = new Booking();
             booking.setUserId(userId);
             booking.setGuestName(guest.get().getFirstName() + " " + guest.get().getLastName());
@@ -111,6 +119,7 @@ public class BookingServlet extends HttpServlet {
             booking.setStatus("ACTIVE");
             booking.setCreatedAt(LocalDateTime.now());
 
+            // Save the booking only if no active reservation overlaps the chosen room and time range.
             if (!bookingDAO.createIfAvailable(booking)) {
                 request.setAttribute("availabilityMessage", "Room is already booked for this time.");
                 request.setAttribute("available", false);
@@ -119,6 +128,7 @@ public class BookingServlet extends HttpServlet {
                 return;
             }
 
+            // Email confirmation is optional and should not prevent the booking from being saved successfully.
             if (EmailUtil.isConfigured()) {
                 try {
                     EmailUtil.sendBookingConfirmation(booking);
@@ -156,6 +166,7 @@ public class BookingServlet extends HttpServlet {
 
     private void showBookingForm(HttpServletRequest request, HttpServletResponse response, Room room)
             throws ServletException, IOException {
+        // Re-render the booking JSP with the selected room, the fresh CSRF token, and any validation errors.
         request.setAttribute("room", room);
         request.setAttribute("csrfToken", CsrfTokenUtil.getOrCreate(request.getSession(true)));
         request.setAttribute("minimumDate", LocalDate.now());

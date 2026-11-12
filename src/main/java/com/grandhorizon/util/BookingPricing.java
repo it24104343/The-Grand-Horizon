@@ -11,6 +11,8 @@ import java.util.Locale;
 import java.util.Set;
 
 public final class BookingPricing {
+    // Utility class for pricing and validation. It calculates the amount for a stay and ensures
+    // meal selections match only the options available for a particular room type.
     private static final BigDecimal BREAKFAST_RATE = new BigDecimal("500.00");
     private static final BigDecimal LUNCH_RATE = new BigDecimal("800.00");
     private static final BigDecimal DINNER_RATE = new BigDecimal("1000.00");
@@ -24,6 +26,7 @@ public final class BookingPricing {
     }
 
     public static BigDecimal calculate(Room room, int durationHours, List<String> selectedMeals) {
+        // Total price is the hourly room rate multiplied by the stay length, plus any chosen meal charges.
         if (durationHours < 1 || durationHours > 72) {
             throw new IllegalArgumentException("Duration must be from 1 to 72 hours.");
         }
@@ -36,6 +39,7 @@ public final class BookingPricing {
     }
 
     public static List<String> validateSelectedMeals(Room room, List<String> selectedMeals) {
+        // Keep only meals that the room actually supports and preserve the standard breakfast/lunch/dinner order.
         Set<String> offeredMeals = new LinkedHashSet<>();
         for (String meal : room.getMealOptions()) {
             offeredMeals.add(normalizeMeal(meal));

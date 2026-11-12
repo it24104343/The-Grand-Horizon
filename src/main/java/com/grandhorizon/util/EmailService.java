@@ -12,6 +12,7 @@ import jakarta.mail.internet.MimeMessage;
 
 import java.util.Properties;
 
+// EmailService sends system notifications using environment-based SMTP configuration for booking alerts.
 public class EmailService {
     // Set MAIL_SMTP_HOST, MAIL_SMTP_PORT, MAIL_SMTP_USERNAME, MAIL_SMTP_PASSWORD,
     // MAIL_FROM, MAIL_SMTP_AUTH, and MAIL_SMTP_STARTTLS in the application environment.

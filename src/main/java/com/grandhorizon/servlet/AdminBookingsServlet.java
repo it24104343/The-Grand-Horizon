@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 @WebServlet("/admin/bookings")
+// AdminBookingsServlet prepares the admin booking list and cancelled booking list for management screens.
 public class AdminBookingsServlet extends HttpServlet {
     private final BookingDAO bookingDAO = new BookingDAO();
 

@@ -14,6 +14,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.Iterator;
 import java.util.UUID;
 
+// RoomImageStorage saves and validates room photos before they are displayed on the website.
 public final class RoomImageStorage {
     private static final long MAX_IMAGE_SIZE = 5L * 1024 * 1024;
     private static final int MAX_IMAGE_DIMENSION = 6000;

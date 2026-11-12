@@ -15,6 +15,7 @@ import java.io.IOException;
         "/profile", "/profile/update", "/profile/delete",
         "/booking", "/booking/cancel", "/book-room.jsp", "/admin-dashboard.jsp", "/admin/*"
 })
+// AuthenticationFilter blocks unauthorized access to protected user and admin pages.
 public class AuthenticationFilter implements Filter {
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain chain)

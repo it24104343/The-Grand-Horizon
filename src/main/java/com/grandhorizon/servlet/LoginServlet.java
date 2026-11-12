@@ -17,6 +17,7 @@ import java.util.Locale;
 import java.util.Optional;
 
 @WebServlet("/login")
+// LoginServlet authenticates the user, manages the session, and redirects users to the correct page.
 public class LoginServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)

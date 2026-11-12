@@ -2,6 +2,7 @@ package com.grandhorizon.model;
 
 import java.math.BigDecimal;
 
+// StandardRoom is the regular room category used for standard accommodation and pricing.
 public class StandardRoom extends Room {
     public StandardRoom(long id, String roomNumber, String description, int capacity,
                         BigDecimal pricePerNight, String amenities, boolean available) {

@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 
 @WebServlet("/profile/delete")
+// DeleteAccountServlet removes a user account after password verification and clears the session.
 public class DeleteAccountServlet extends HttpServlet {
     private final UserDAO userDAO = new UserDAO();
 

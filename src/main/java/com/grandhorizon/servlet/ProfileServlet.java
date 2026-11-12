@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.Optional;
 
 @WebServlet("/profile")
+// ProfileServlet loads the logged-in user's data and booking history for the profile page.
 public class ProfileServlet extends HttpServlet {
     private final UserDAO userDAO = new UserDAO();
     private final BookingDAO bookingDAO = new BookingDAO();

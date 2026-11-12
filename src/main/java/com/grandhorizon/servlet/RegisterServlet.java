@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.regex.Pattern;
 
 @WebServlet("/register")
+// RegisterServlet handles new guest account creation and validates the registration form.
 public class RegisterServlet extends HttpServlet {
     private static final Pattern EMAIL = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
     private final UserDAO userDAO = new UserDAO();

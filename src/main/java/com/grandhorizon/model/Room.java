@@ -1,6 +1,8 @@
 package com.grandhorizon.model;
 
 import java.math.BigDecimal;
+
+// Room is the main model for an accommodation unit. It holds room details, availability, and price logic.
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -34,6 +36,7 @@ public class Room {
         this.available = available;
     }
 
+    // Calculate the cost of a stay based on the selected number of hours and the room's hourly rate.
     public BigDecimal calculatePrice(int hours) {
         validateDuration(hours);
         return getHourlyRate().multiply(BigDecimal.valueOf(hours));
